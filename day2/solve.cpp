@@ -6,29 +6,25 @@
 int part1(void) {
     std::ifstream file{"input.txt"};
     int no_safe = 0;
-    std::string line;
 
-    while(std::getline(file, line)) {
-        int i = 0;
-        bool increasing = true, safe = true;
+    for (std::string line; std::getline(file, line); ) {
+        bool increasing = true, decreasing = true, safe = true;
         std::istringstream ss(line);
-        int num = 0, prev = 0;
-        while (ss >> num) {
-            if (i > 0) {
-                if (num == prev || abs(num - prev) > 3) {
-                    safe = false;
-                    break;
-                } 
-                if (i == 1) increasing = num > prev ? true : false;
-                else if ((num > prev && !increasing) || num < prev && increasing) {
-                    safe = false;
-                    break;
-                }
+        int prev;
+        ss >> prev;
+
+        for (int num; ss >> num;) {
+            if (increasing && (num >= prev + 1 && num <= prev + 3)) {
+                decreasing = false;
+            } else if (decreasing && (num <= prev - 1 && num >= prev - 3)) {
+                increasing = false;
+            } else {
+                safe = false;
+                break;
             }
             prev = num;
-            ++i;
         }
-        if (safe) ++no_safe;
+        no_safe += safe;
     }
 
     return no_safe;
@@ -57,18 +53,16 @@ int part2(char* input, char* output) {
 
     int no_safe = 0;
     std::ifstream file{input};
-    std::string line{};
     std::ofstream outFile{output};
 
     int no_line = 0;
-    while (std::getline(file, line)) {
+    for (std::string line; std::getline(file, line); ) {
         int errors = 0, len = 0;
 
         // get first 3 ids
         int firstThree[3];
         std::istringstream ss(line);
-        for (; len<3; ++len) {
-            if (ss.eof()) break; 
+        for (; len<3, !ss.eof(); ++len) {
             ss >> firstThree[len];
         }
         if (len < 3) {
@@ -76,11 +70,11 @@ int part2(char* input, char* output) {
             continue;
         }
 
-        // get the target monoticity of the sequence which can be decided from the first 3/4 ids
+        // get the target monoticity of the sequence which can be decided from the first 3 or 4 ids
         bool increasing = true;
         int a = firstThree[0], b = firstThree[1], c = firstThree[2];
         int prev2 = b, prev = c;
-        if (!inRange(a,b) && !inRange(a,c) && !inRange(b,c)) errors = 2;
+        if (!inRange(a,b) && !inRange(a,c) && !inRange(b,c)) continue;
         else if (isIncreasing(a,b) == isIncreasing(b,c)){
             if (!isIncreasing(a,b)) increasing = false;
             if (!inRange(a,b)) {
@@ -137,6 +131,6 @@ int part2(char* input, char* output) {
 
 int main(int argc, char* argv[]) {
     std::cout << "Part 1: " << part1() << "\n";
-    std::cout << "Part 2: " << part2(argv[1], argv[2]) << "\n";
+    // std::cout << "Part 2: " << part2(argv[1], argv[2]) << "\n";
     return 0;
 }
