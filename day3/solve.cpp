@@ -28,11 +28,17 @@ long long part1() {
         while (file >> c && isdigit(c)){
             firstNum = firstNum * 10 + (c-'0');
         }
-        if (c != ',') return 0;
+        if (c != ',') {
+            if (!file.eof()) file.unget();
+            return 0;
+        }
         while (file >> c && isdigit(c)){
             secondNum = secondNum * 10 + (c-'0');
         }
-        if (c != ')') return 0;
+        if (c != ')') {
+            if (!file.eof()) file.unget();
+            return 0;
+        }
         std::cout << "multiplying " << firstNum << " and " << secondNum << "\n";
         return firstNum * secondNum;
     };
@@ -47,115 +53,65 @@ long long part1() {
 
 long long part2() {
     std::ifstream file{"input.txt"};
-    char c;
-    file >> c;
     long long res = 0;
 
     // states
     std::string prefix = "mul(", enable = "do()", disable = "don't()";
     int preID = 0, enableID = 0, disableID = 0;
-    bool findPrefix = true;
-
-    bool findFirstDigit = false;
-    int firstDigit = 0;
-    bool findSecondDigit = false;
-    int secondDigit = 0;
-    bool foundExpr = false;
-
     bool enabled = true;
-    bool disabled = false;
 
+    char c;
+    file >> c;
     while (!file.eof()){
-        // update enabled and disabled states
+        // update which state we're at
         if (enabled) {
-            // look for don't()
-            if (c == disable[disableID]) {
-                // std::cout << "found disable char " << c << "\n";
-                ++disableID;
-                file >> c;
-                if (disableID == disable.length()) {
-                    // std::cout << "found don't() at " << file.tellg() << "\n"; 
-                    disableID = 0;
-                    disabled = true;
-                    enabled = false;
-                    findPrefix = false;
-                    findFirstDigit = false;
-                    findSecondDigit = false;
-                }
+            if (c == prefix[preID]) ++preID;
+            else if (c == 'm') preID = 1;
+            else preID = 0;
+
+            if (c == disable[disableID]) ++disableID;
+            else if (c == 'd') disableID = 1;
+            else disableID = 0;
+        }
+        if (c == enable[enableID]) ++enableID;
+        else if (c == 'd') enableID = 1;
+        else enableID = 0;
+
+        file >> c;
+        if (enableID == enable.length()){
+            enabled = true;
+            enableID = 0;
+        } else if (disableID == disable.length()){
+            enabled = false;
+            disableID = 0;
+        } else if (preID == prefix.length()){
+            // read numbers in
+            preID = 0;
+            long long firstNum = 0, secondNum = 0;
+            file.unget();
+            while (file >> c && isdigit(c)){
+                firstNum = firstNum * 10 + (c-'0');
+            }
+            if (c != ',') {
+                if (!file.eof()) file.unget();
                 continue;
             }
-            else if (disableID > 0) disableID = 0;
-        } 
-
-        if (disabled) {
-            // look for do()
-            if (c == enable[enableID]) ++enableID;
-            else if (enableID > 0) enableID = 0;
-            if (enableID == enable.length()) {
-                enableID = 0;
-                enabled = true;
-                disabled = false;
-                findPrefix = true;
+            while (file >> c && isdigit(c)){
+                secondNum = secondNum * 10 + (c-'0');
             }
-            file >> c;
-        } else if (findPrefix) {
-            if (c == prefix[preID]) {
-                ++preID;
-                file >> c;
+            if (c != ')') {
+                if (!file.eof()) file.unget();
+                continue;
             }
-            else if (preID == 0) file >> c;
-            else preID = 0;
-            if (preID >= prefix.length()){
-                findPrefix = false;
-                findFirstDigit = true;
-                preID = 0;
-            }
-        } else if (findFirstDigit) {
-            // find run of digits
-            while (isdigit(c)) {
-                firstDigit = firstDigit * 10 + (c-'0');
-                file >> c;
-            }
-            // has to end with ,
-            findFirstDigit = false;
-            if (c == ',') {
-                findSecondDigit = true;
-                file >> c;
-            } else {
-                findPrefix = true;
-                firstDigit = 0;
-            }
-        } else if (findSecondDigit) {
-            // find run of digits
-            while (isdigit(c)) {
-                secondDigit = secondDigit * 10 + (c-'0');
-                file >> c;
-            }
-            findSecondDigit = false;
-            if (c == ')') {
-                foundExpr = true;
-                file >> c;
-            } else {
-                findPrefix = true;
-                firstDigit = 0;
-                secondDigit = 0;
-            }
-        }
-
-        if (foundExpr) {
-            // std::cout << "multiply " << firstDigit << " and " << secondDigit << "\n";
-            res += (firstDigit * secondDigit);
-            firstDigit = 0;
-            secondDigit = 0;
-            findPrefix = true;
-            foundExpr = false;
+            std::cout << "multiplying " << firstNum << " and " << secondNum << "\n";
+            res += firstNum * secondNum;
         }
     }
     return res;
 }
 
 int main(void) {
-    std::cout << "Part 1: " << part1() << "\n";
-    // std::cout << "Part 2: " << part2() << "\n";
+    // std::cout << "Part 1: " << part1() << "\n";
+    std::cout << "Part 2: " << part2() << "\n";
     return 0;
 }
