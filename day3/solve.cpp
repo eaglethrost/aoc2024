@@ -7,94 +7,41 @@ long long part1() {
     /**
      * States:
      * 1. String match for mult(
-     * 2. Reading first num sequence
-     * 3. ,
-     * 4. Reading second num sequence
-     * 5. )
-     * 
-     * Options:
-     * 1. Use KMP, Rabin-Karp to search for mult( instances
-     * 
-     * 
+     * 2. Parse (num,num)
     */
     std::ifstream file{"input.txt"};
-    char c;
-    file >> c;
     long long res = 0;
-
-    // states
     std::string prefix = "mul(";
     int preID = 0;
-    bool findPrefix = true;
 
-    bool findFirstDigit = false;
-    int firstDigit = 0;
-    bool findSecondDigit = false;
-    int secondDigit = 0;
-    bool foundExpr = false;
+    char c;
+    auto parseMul = [&](){
+        while (preID < prefix.length() && file >> c){
+            if (c == prefix[preID]) ++preID;
+            else if (c == 'm') preID = 1;
+            else preID = 0;
+        }
+        preID = 0;
+    };
+    auto parseNumbers = [&]() -> long long {
+        long long firstNum = 0, secondNum = 0;
+        while (file >> c && isdigit(c)){
+            firstNum = firstNum * 10 + (c-'0');
+        }
+        if (c != ',') return 0;
+        while (file >> c && isdigit(c)){
+            secondNum = secondNum * 10 + (c-'0');
+        }
+        if (c != ')') return 0;
+        std::cout << "multiplying " << firstNum << " and " << secondNum << "\n";
+        return firstNum * secondNum;
+    };
 
     while (!file.eof()){
-        if (findPrefix) {
-            if (c == prefix[preID]) {
-                // std::cout << "matched " << c << " at " << file.tellg() << "\n";
-                ++preID;
-                file >> c;
-            }
-            else if (preID == 0) file >> c;
-            else preID = 0;
-            if (preID >= prefix.length()){
-                // std::cout << "found prefix at " << file.tellg() << "\n";
-                findPrefix = false;
-                findFirstDigit = true;
-                preID = 0;
-            }
-        } else if (findFirstDigit) {
-            // find run of digits
-            // std::cout << "finding first digit at " << file.tellg() << " of " << c << "\n";
-            while (isdigit(c)) {
-                // std::cout << "add digit " << c << "\n";
-                firstDigit = firstDigit * 10 + (c-'0');
-                file >> c;
-            }
-            // has to end with ,
-            findFirstDigit = false;
-            if (c == ',') {
-                findSecondDigit = true;
-                file >> c;
-                // std::cout << "got number " << firstDigit << " next char is " << c << "\n";
-            } else {
-                findPrefix = true;
-                firstDigit = 0;
-            }
-        } else if (findSecondDigit) {
-            // find run of digits
-            // std::cout << "finding second digit at " << file.tellg() << " of " << c << "\n";
-            while (isdigit(c)) {
-                // std::cout << "add digit " << c << "\n";
-                secondDigit = secondDigit * 10 + (c-'0');
-                file >> c;
-            }
-            findSecondDigit = false;
-            // std::cout << "got number " << secondDigit << "\n";
-            if (c == ')') {
-                foundExpr = true;
-                file >> c;
-            } else {
-                findPrefix = true;
-                firstDigit = 0;
-                secondDigit = 0;
-            }
-        }
-
-        if (foundExpr) {
-            std::cout << "multiply " << firstDigit << " and " << secondDigit << "\n";
-            res += (firstDigit * secondDigit);
-            firstDigit = 0;
-            secondDigit = 0;
-            findPrefix = true;
-            foundExpr = false;
-        }
+        parseMul();
+        res += parseNumbers();
     }
+
     return res;
 }
 
@@ -208,7 +155,7 @@ long long part2() {
 }
 
 int main(void) {
-    // std::cout << "Part 1: " << part1() << "\n";
-    std::cout << "Part 2: " << part2() << "\n";
+    std::cout << "Part 1: " << part1() << "\n";
+    // std::cout << "Part 2: " << part2() << "\n";
     return 0;
 }
