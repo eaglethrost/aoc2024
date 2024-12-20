@@ -4,29 +4,19 @@ def part1():
     rows = len(words); cols = len(words[0])
     
     xmas = "XMAS"; samx = "SAMX"
+    word_len = len(xmas)
     res = 0
 
-    def check_xmas(char, id):
+    def match_char(char, word, id):
         nonlocal res
-        if char == xmas[id]:
+        first_char = 'X' if word == "XMAS" else 'S'
+        if char == word[id]:
             id += 1
-        elif char == 'X':
+        elif char == first_char:
             id = 1
         else:
             id = 0
-        if id == len(xmas):
-            res += 1
-            id = 0
-        return id
-    def check_samx(char, id):
-        nonlocal res
-        if char == samx[id]:
-            id += 1
-        elif char == 'S':
-            id = 1
-        else:
-            id = 0
-        if id == len(samx):
+        if id == len(word):
             res += 1
             id = 0
         return id
@@ -37,15 +27,15 @@ def part1():
         for j in range(0, cols):
 
             # match XMAS & SAMX horizontally rightward and vertically downward
-            xmas_i_row = check_xmas(words[i][j], xmas_i_row)
-            samx_i_row = check_samx(words[i][j], samx_i_row)
-            xmas_i_col = check_xmas(words[j][i], xmas_i_col)
-            samx_i_col = check_samx(words[j][i], samx_i_col)
+            xmas_i_row = match_char(words[i][j], xmas, xmas_i_row)
+            samx_i_row = match_char(words[i][j], samx, samx_i_row)
+            xmas_i_col = match_char(words[j][i], xmas, xmas_i_col)
+            samx_i_col = match_char(words[j][i], samx, samx_i_col)
  
             # match XMAS & SAMX both diagonally
-            if i <= rows-len(xmas) and j <= cols-len(xmas):
-                left_diag = "".join(words[i+k][j+k] for k in range(0, 4))
-                right_diag = "".join(words[i+k][cols-1-j-k] for k in range(0, 4))
+            if i <= rows-word_len and j <= cols-word_len:
+                left_diag = "".join(words[i+k][j+k] for k in range(0, word_len))
+                right_diag = "".join(words[i+k][cols-1-j-k] for k in range(0, word_len))
                 if left_diag == "XMAS" or left_diag == "SAMX":
                     res += 1
                 if right_diag == "XMAS" or right_diag == "SAMX":
